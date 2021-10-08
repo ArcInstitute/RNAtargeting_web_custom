@@ -1,0 +1,85 @@
+<!-- <!DOCTYPE html>
+<html lang='en'>
+<head>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+	<script src="https://d3js.org/d3.v7.min.js"></script>
+	<script src="app.js"></script>
+
+<meta charset='UTF-8'>
+<meta name='viewport' content="width=device-width, initial-scale=1.0">
+<title>Human gene Cas13d guide efficiency</title>
+</head> -->
+
+{% extends "header.html" %}
+
+
+{% block body %}
+<div class="container">
+  <h2 style="text-align:center;">CasRx guide design</h2>
+  <ul class="nav nav-pills nav-justified">
+    <li><a href="/">Home</a></li>
+    <li><a href="/human">Human</a></li>
+    <li><a href="/mouse">Mouse</a></li>
+    <li><a href="/others">Other organisms</a></li>
+    <li class="active"><a href="/custom">Custom sequence input</a></li>
+  </ul>
+  <hr style="height:2px;border-width:1;color:white;">
+</div>
+
+
+
+<h3 style="text-align:center;">Custom sequence Cas13d guide efficiency</h3>
+
+<div>
+<h4 style="font-size:20px";> Here, we provide an interface of CasRx guide design for custom input sequences. </h4>
+<ul>
+  <li style="font-size:18px";>For best results, please input the ENTIRE target sequence to enable local target structure prediction and selection of the recommended best guides. If you are only interested in a short region on a target sequence, you can further process our results and pick guides in your region of interest. </li>
+  <li style="font-size:18px";>We recommend an input sequence of at least 60nt, and ideally >200nt</li>
+  <li style="font-size:18px";>If you can find your gene in our precomputed page, we recommend you to use the results there, because the custom input model does not utilize information like CDS location, splice variants or relative target positions in the full transcript.</li>
+</ul>
+</div>
+
+<div>
+<form id="upload-file" method="post" enctype="multipart/form-data">
+    <fieldset>
+        <label for="file" style="color:white;">Upload a fasta file (ends in ".fasta") with your sequences:</label>
+        <input name="file" type="file" accept=".fa,.fasta">
+        <p> You may put multiple fasta sequences in a single file (but do not put the isoforms for the same gene there!)</p>
+    </fieldset>
+    <fieldset>
+        <button id="upload-file-btn" type="button">Submit & Predict</button>
+    </fieldset>
+</form>
+
+<p>Click the "Submit & Predict" button to predict efficient CasRx guides for your sequences.
+<br> It might take a few minutes to predict. Please be patient and keep the tab open.</p>
+</div>
+
+<!-- Image loader -->
+<!-- <div id='loader' style='display: none;'>
+  <img src='/static/img/reload.gif' width='64px' height='50px'>
+  <p> Predicting... It might take a few minutes. Please be patient and it will come out!
+</div> -->
+<!-- Image loader -->
+
+<!-- <div class="progress">
+  <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+</div>
+<div class="progress">
+  <div class="progress-bar" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+</div>
+<div class="progress">
+  <div class="progress-bar" role="progressbar" style="width: 50%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+</div>
+<div class="progress">
+  <div class="progress-bar" role="progressbar" style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+</div>
+<div class="progress">
+  <div class="progress-bar" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+</div> -->
+
+
+{% endblock %}
+
+
+
