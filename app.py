@@ -50,7 +50,6 @@ def upload_file_fa():
                         resultlist = rowlist, 
                         result_path = result_p
                     )
-
     return render_template("custom_results.html")
 
 

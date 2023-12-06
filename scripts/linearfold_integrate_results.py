@@ -40,8 +40,6 @@ def parse_guide_linearfold_fasta_into_dict_contrafold(fname):
 
 
 def parse_target_flanks_linearfold_fasta_into_dict_contrafold(fname):
-    #flank_num = flank_len
-    #fname = 'linearfold_output/linfold_guides_nearby'+str(flank_num)+'_output.txt'
     fasta_file = open(fname)
     seq_dict = {}
     score_dict = {}

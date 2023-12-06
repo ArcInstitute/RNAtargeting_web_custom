@@ -1,15 +1,15 @@
-from scipy.stats import linregress
-from scipy import stats
-import tensorflow as tf
-from tensorflow import keras
-from sklearn.metrics import roc_auc_score, average_precision_score, roc_curve, precision_recall_curve, confusion_matrix
+import os
+import pdb
+import h5py
 from matplotlib import pyplot as plt
 import pandas as pd
 import seaborn as sn
 import numpy as np
-import os
-import pdb
-import h5py
+from sklearn.metrics import roc_auc_score, average_precision_score, roc_curve, precision_recall_curve, confusion_matrix
+from scipy.stats import linregress
+from scipy import stats
+import tensorflow as tf
+from tensorflow import keras
 
 
 
@@ -44,6 +44,10 @@ linearfold_positions = {
 
 RESULTS_DIR = 'results/'
 
+
+def encoded_nuc_to_str(encoded_seq):
+    indices = np.argmax(encoded_seq, axis=1)
+    return ''.join([base_positions[i] for i in indices])
 
 def save_to_results(model_name, dataset_name, regre, kfold, split, figure_name):
     dataset_folder = RESULTS_DIR + dataset_name + '/'
@@ -91,9 +95,9 @@ def classification_analysis_new(testpath, model: keras.Model, test_dataset: tf.d
     else:
         test_sequences = [np.array(sequences[0]) for sequences in test_inputs]
         
-    def encoded_nuc_to_str(encoded_seq):
-        indices = np.argmax(encoded_seq, axis=1)
-        return ''.join([base_positions[i] for i in indices])
+    # def encoded_nuc_to_str(encoded_seq):
+    #     indices = np.argmax(encoded_seq, axis=1)
+    #     return ''.join([base_positions[i] for i in indices])
     
     outputs, labels = get_outputs_and_labels(model, test_dataset, sigmoid=True)
     
@@ -139,9 +143,9 @@ def classification_analysis(model, test_dataset, model_name, dataset_name, regre
     else:
         test_sequences = [np.array(sequences[0]) for sequences in test_inputs]
         
-    def encoded_nuc_to_str(encoded_seq):
-        indices = np.argmax(encoded_seq, axis=1)
-        return ''.join([base_positions[i] for i in indices])
+    # def encoded_nuc_to_str(encoded_seq):
+    #     indices = np.argmax(encoded_seq, axis=1)
+    #     return ''.join([base_positions[i] for i in indices])
     
     outputs, labels = get_outputs_and_labels(model, test_dataset, sigmoid=True)
     
@@ -305,9 +309,9 @@ def classification_analysis_cd(model, test_dataset, model_name, dataset_name, re
     else:
         test_sequences = [np.array(sequences[0]) for sequences in test_inputs]
         
-    def encoded_nuc_to_str(encoded_seq):
-        indices = np.argmax(encoded_seq, axis=1)
-        return ''.join([base_positions[i] for i in indices])
+    # def encoded_nuc_to_str(encoded_seq):
+    #     indices = np.argmax(encoded_seq, axis=1)
+    #     return ''.join([base_positions[i] for i in indices])
     
     outputs, labels = get_outputs_and_labels(model, test_dataset, sigmoid=True)
     
@@ -398,9 +402,9 @@ def classification_analysis_nbt(model, test_dataset, model_name, dataset_name, r
     else:
         test_sequences = [np.array(sequences[0]) for sequences in test_inputs]
         
-    def encoded_nuc_to_str(encoded_seq):
-        indices = np.argmax(encoded_seq, axis=1)
-        return ''.join([base_positions[i] for i in indices])
+    # def encoded_nuc_to_str(encoded_seq):
+    #     indices = np.argmax(encoded_seq, axis=1)
+    #     return ''.join([base_positions[i] for i in indices])
     
     outputs, labels = get_outputs_and_labels(model, test_dataset, sigmoid=True)
     
@@ -619,9 +623,9 @@ def get_regression_metrics(model: keras.Model, test_set: tf.data.Dataset, regre,
     else:
         test_sequences = [np.array(sequences[0]) for sequences in test_inputs]
         
-    def encoded_nuc_to_str(encoded_seq):
-        indices = np.argmax(encoded_seq, axis=1)
-        return ''.join([base_positions[i] for i in indices])
+    # def encoded_nuc_to_str(encoded_seq):
+    #     indices = np.argmax(encoded_seq, axis=1)
+    #     return ''.join([base_positions[i] for i in indices])
     
     #dataset_filtered_csv_path = 'dataset/integrated_guide_feature_filtered_new_ver3.csv'
     dataset_filtered_csv_path = 'dataset/integrated_guide_feature_filtered_f24_mismatch3_rnafe.csv'
@@ -753,9 +757,9 @@ def get_regression_metrics_nbt(model: keras.Model, test_set: tf.data.Dataset, re
     else:
         test_sequences = [np.array(sequences[0]) for sequences in test_inputs]
         
-    def encoded_nuc_to_str(encoded_seq):
-        indices = np.argmax(encoded_seq, axis=1)
-        return ''.join([base_positions[i] for i in indices])
+    # def encoded_nuc_to_str(encoded_seq):
+    #     indices = np.argmax(encoded_seq, axis=1)
+    #     return ''.join([base_positions[i] for i in indices])
     
     dataset_filtered_csv_path = 'dataset/cas13d_nbt-data_combined_input.csv'
     df = pd.read_csv(dataset_filtered_csv_path)
@@ -834,9 +838,9 @@ def get_regression_metrics_cd(model: keras.Model, test_set: tf.data.Dataset, reg
     else:
         test_sequences = [np.array(sequences[0]) for sequences in test_inputs]
         
-    def encoded_nuc_to_str(encoded_seq):
-        indices = np.argmax(encoded_seq, axis=1)
-        return ''.join([base_positions[i] for i in indices])
+    # def encoded_nuc_to_str(encoded_seq):
+    #     indices = np.argmax(encoded_seq, axis=1)
+    #     return ''.join([base_positions[i] for i in indices])
     
     dataset_filtered_csv_path = 'dataset/cdscreen_r1r2_rel_new_targeting_guides.csv'
     df = pd.read_csv(dataset_filtered_csv_path)
@@ -1092,9 +1096,9 @@ def integrated_gradients(model, test_dataset, regre, kfold, split, model_name, d
     g.create_dataset("task0", data=sequences_igrads_hypo)
     f.close()
 
-    def encoded_nuc_to_str(encoded_seq):
-        indices = np.argmax(encoded_seq, axis=1)
-        return ''.join([base_positions[i] for i in indices])
+    # def encoded_nuc_to_str(encoded_seq):
+    #     indices = np.argmax(encoded_seq, axis=1)
+    #     return ''.join([base_positions[i] for i in indices])
 
     def encoded_linfold_to_str(encoded_seq):
         indices = np.argmax(encoded_seq, axis=1)

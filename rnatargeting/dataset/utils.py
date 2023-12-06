@@ -4,7 +4,7 @@ from typing import TextIO
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
 import tensorflow as tf
-from utils import base_positions, flip_dict, linearfold_positions
+from rnatargeting.utils import base_positions, flip_dict, linearfold_positions
 import numpy as np
 import re
 import sklearn

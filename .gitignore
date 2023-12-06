@@ -2,6 +2,8 @@
 tmp/
 LinearFold/
 data/
+results/
+.DS_Store
 
 # Environments
 .env

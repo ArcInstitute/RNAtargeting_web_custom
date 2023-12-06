@@ -2,15 +2,15 @@ import pandas as pd
 import numpy as np
 import csv
 import sys
-#import matplotlib.pyplot as plt
-#import seaborn as sns
+import os
 from Bio import SeqIO
 from Bio.Seq import Seq
 
 
 def main(fpath):
     input_fasta = fpath
-    output_f = '.'.join(fpath.split('.')[:-1])+'_guide_library.csv'
+    outfile_prefix = os.path.splitext(fpath)[0]
+    output_f = outfile_prefix + '_guide_library.csv'
 
     guide_dic = {} #guide sequence and features
     # handle multiple fasta sequences, support different genes (but don't put different isoform sequences for the same gene!)
@@ -18,10 +18,6 @@ def main(fpath):
         sequence = record.seq
         transcript_ID = record.id
         title = str(record.description)
-        #find the gene symbol
-        #a = title.find("(")
-        #b = title.find(")")
-        #gene_symbol = title[a+1:b]
 
         #design guides
         gene_guide_dic = {} #gene-specific guide dic
@@ -80,28 +76,32 @@ def main(fpath):
     df = pd.read_csv(output_f)
     num_examples = len(df['guide'].values)
     guideseq = df['guide'].values  
-    with open(('.'.join(fpath.split('.')[:-1]))+"_linfold_guides_input.fasta", 'w') as file:
+
+    outfile = outfile_prefix + '_linfold_guides_input.fasta'
+    with open(outfile, 'w') as outF:
         for i in range(num_examples):
-            file.write(">guide #" + str(i + 1) + ", " +  df.iloc[i, 0] + "\n")
-            file.write(standard_prefix + guideseq[i] + "\n")
+            outF.write(">guide #" + str(i + 1) + ", " +  df.iloc[i, 0] + "\n")
+            outF.write(standard_prefix + guideseq[i] + "\n")
 
     #target with flank 15 nt
     #native
     nearby_seq_all = df['nearby_seq_all_15'].values
-    with open(('.'.join(fpath.split('.')[:-1]))+"_linfold_guides_nearby15_input.fasta", 'w') as file:
+    outfile = outfile_prefix + "_linfold_guides_nearby15_input.fasta"
+    with open(outfile, 'w') as outF:
         for i in range(num_examples):
-            file.write(">guide #" + str(i + 1) + ", " +  df.iloc[i, 0] + "\n")
-            file.write(nearby_seq_all[i] + "\n")
+            outF.write(">guide #" + str(i + 1) + ", " +  df.iloc[i, 0] + "\n")
+            outF.write(nearby_seq_all[i] + "\n")
             
     # with constraints
     guide_rv = df['target_seq'].values
-    with open(('.'.join(fpath.split('.')[:-1]))+"_linfold_guides_constraints_nearby15_input.fasta", 'w') as file:
+    outfile = outfile_prefix + "_linfold_guides_constraints_nearby15_input.fasta"
+    with open(outfile, 'w') as outF:
         for i in range(num_examples):
-            file.write(">guide #" + str(i + 1) + ", " +  df.iloc[i, 0] + "\n")
-            file.write(nearby_seq_all[i] + "\n")
+            outF.write(">guide #" + str(i + 1) + ", " +  df.iloc[i, 0] + "\n")
+            outF.write(nearby_seq_all[i] + "\n")
             target_index = nearby_seq_all[i].find(guide_rv[i])
             constraints = "?"*target_index + "."*30 + "?"*(len(nearby_seq_all[i])-30-target_index)
-            file.write(constraints + "\n")
+            outF.write(constraints + "\n")
 
 
 if __name__ == '__main__':

@@ -2,7 +2,9 @@ import subprocess
 import sys
 import os
 import tempfile
+from rnatargeting.predict import predict_ensemble_test
 from rnatargeting.linearfold import make_guide_library_features, linearfold_integrate_results
+
 
 
 def run_subprocess(cmd):
@@ -58,7 +60,19 @@ def run_pred(fpath):
         target_fl_c_out,
         fpath_prefix
     )
+
+    # Predict guide efficiency using the CNN model
+    predict_ensemble_test(
+        dataset_name='CNN_sequence_input', 
+        model_name='guide_nolin_threef',
+        saved='saved_model/sequence_only_input_3f',
+        testset_path=feature_f,
+        guidelength=30,
+        flanklength=15
+    )
+
     exit()
+    
 
     # Predict guide efficiency using the CNN model
     subprocess.run(['python3','predict_ensemble_test.py','--dataset','CNN_sequence_input','--model','guide_nolin_threef',
