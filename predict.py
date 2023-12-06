@@ -97,7 +97,7 @@ def run_pred(fpath, outfile=None):
         outdir = os.path.dirname(fpath)
         if outdir != '' or outdir != '.':
             os.makedirs(outdir, exist_ok=True)
-        pred_df.to_csv(outfile)
+        pred_df.to_csv(outfile, index=False)
         sys.stderr.write(f"  Predictions written: {outfile}\n")
 
     # Return dataframe

@@ -18,6 +18,7 @@ st.set_page_config(
 )
 
 # Main
+## Description
 st.markdown(
         """
         ## Predict custom sequence Cas13d guide efficiency
@@ -29,7 +30,9 @@ st.markdown(
         * If you can find your gene in our precomputed page, we recommend you to use the results there, because the custom input model does not utilize information like CDS location, splice variants or relative target positions in the full transcript.
         """
     )
+## File upload
 fasta_file = st.file_uploader('Upload a fasta file')
+## Predict & display results
 if fasta_file is not None:
     with st.spinner("Calculating..."):
         try:
