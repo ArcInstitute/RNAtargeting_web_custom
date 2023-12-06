@@ -1,62 +1,41 @@
-
 # import
 import os
-import csv
-from werkzeug.exceptions import HTTPException
-from flask import Flask, render_template, request, url_for, redirect
-#import pandas as pd
-#import sqlite3
-#import mysql.connector
-
-#import predict
+## 3rd party
+import streamlit as st
+## App
 from predict import run_pred
 
-# Init app
-app = Flask(__name__)
+# Init variables
+fasta_file = None
 
-# Set home page
-@app.route('/')
-def homepage():
-    return render_template("main.html")
+# App init
+st.set_page_config(
+    page_title="",
+    page_icon="🧬",
+    layout="centered",
+    initial_sidebar_state="auto",
+    menu_items=None
+)
 
-# Set custom primer page
-@app.route('/custom')
-def custom_get():
-    return render_template("custom.html")
+# Main
+st.markdown(
+        """
+        ## Predict custom sequence Cas13d guide efficiency
 
-# Set custom primer results page
-@app.route('/custom_results', methods=['POST','GET'])
-def upload_file_fa():
-    if request.method == "POST":
-        # check if the post request has the file object
-        file = request.files.get('file')
-        if not file or file.filename == '':
-            return redirect(url_for('custom_get'))
-        # save the file
-        save_p = os.path.join('dataset', str(file.filename))
-        file.save(save_p)
-        # run prediction
-        result_p = run_pred(save_p) # run prediction scripts
-        # render results
-        rowlist = []
-        with open(result_p) as csvfile:
-            myreader = csv.reader(csvfile)
-            headers = next(myreader, None)
-            for i,row in enumerate(myreader):
-                rowlist.append(row)
-                if i > 20:
-                    return render_template(
-                        "custom_results.html", 
-                        resultlist = rowlist, 
-                        result_path = result_p
-                    )
-    return render_template("custom_results.html")
+        Here, we provide an interface of CasRx guide design for custom input sequences.
 
-
-@app.errorhandler(HTTPException)
-def page_not_found(e):
-    return render_template('http_error.html')
-
-if __name__ == '__main__':
-    # run app
-    app.run(debug=True, host='0.0.0.0', port=8080)
+        * For best results, please input the ENTIRE target sequence to enable local target structure prediction and selection of the recommended best guides. If you are only interested in a short region on a target sequence, you can further process our results and pick guides in your region of interest.
+        * We recommend an input sequence of at least 60nt, and ideally >200nt.
+        * If you can find your gene in our precomputed page, we recommend you to use the results there, because the custom input model does not utilize information like CDS location, splice variants or relative target positions in the full transcript.
+        """
+    )
+fasta_file = st.file_uploader('Upload a fasta file')
+if fasta_file is not None:
+    with st.spinner("Calculating..."):
+        try:
+            df_pred = run_pred(fasta_file.getvalue())
+            st.dataframe(df_pred)
+        except Exception as e:
+            st.error(e)
+        
+        

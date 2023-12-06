@@ -77,7 +77,30 @@ def create_dataset_generator(dataset_name, testset_path):
         raise ValueError(f'Dataset name not recognized: {dataset_name}')
     return dataset
 
+def parse_prediction_results(feature_df_file, pred_df_file):
+    sys.stderr.write('Parsing prediction results...\n')
+    # Load guide feature dataframe
+    df_info= pd.read_csv(feature_df_file)[['transcript id','guide','target_pos_list','target pos num']]
+    # Load prediction dataframe)
+    df_pred = pd.read_csv(pred_df_file)[['spacer sequence','predicted_value_sigmoid']]
+
+    # Merge results
+    df_com = (df_info.merge(df_pred, left_on='guide', right_on='spacer sequence')).drop(columns=['spacer sequence'])
+    df_com['rank'] = df_com.groupby("transcript id")["predicted_value_sigmoid"].rank(ascending=False)
+    df_sorted = df_com.sort_values(by=['transcript id','rank'])
+
+    # return data.frame
+    return df_sorted
+
+    # # Save results
+    # prefix = os.path.splitext(os.path.basename(feature_df_file))[0]
+    # outfile = os.path.join('results', f'{prefix}_prediction_sorted.csv')
+    # df_sorted.to_csv(outfile, index=False)
+    # sys.stderr.write(f"  Predictions written: {outfile}\n")
+    # return outfile
+
 def predict_ensemble_test(dataset_name, model_name, saved, testset_path, guidelength, flanklength, regression=False):
+    # Status
     sys.stderr.write(f"Running ensemble prediction...\n")
 
     # Check for saved model

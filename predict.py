@@ -2,7 +2,7 @@ import subprocess
 import sys
 import os
 import tempfile
-from rnatargeting.predict import predict_ensemble_test
+from rnatargeting.predict import predict_ensemble_test, parse_prediction_results
 from rnatargeting.linearfold import make_guide_library_features, linearfold_integrate_results
 
 
@@ -33,7 +33,16 @@ def run_linearfold(infile, outfile, params = []):
     with open(infile) as inF, open(outfile, 'w') as outF:
         subprocess.run(['LinearFold/linearfold'] + params, stdin=inF, stdout=outF)
 
+
 def run_pred(fpath):
+    # If input is a bytes string, write to file
+    if isinstance(fpath, bytes):
+        tmpfile = os.path.join('data', 'tmp.fasta')
+        with open(tmpfile, 'w') as tmp:
+            tmp.write(fpath.decode('utf-8'))
+        fpath = tmpfile
+
+    # Get basename of input file
     fpath_prefix = os.path.splitext(fpath)[0]
     
     # Make guide library and Linearfold input:
@@ -62,7 +71,7 @@ def run_pred(fpath):
     )
 
     # Predict guide efficiency using the CNN model
-    predict_ensemble_test(
+    result_f = predict_ensemble_test(
         dataset_name='CNN_sequence_input', 
         model_name='guide_nolin_threef',
         saved='saved_model/sequence_only_input_3f',
@@ -71,21 +80,12 @@ def run_pred(fpath):
         flanklength=15
     )
 
-    exit()
-    
+    # Parse prediction results
+    pred_df = parse_prediction_results(feature_files['guide_library'], result_f)
 
-    # Predict guide efficiency using the CNN model
-    subprocess.run(['python3','predict_ensemble_test.py','--dataset','CNN_sequence_input','--model','guide_nolin_threef',
-        '--saved','saved_model/sequence_only_input_3f','--testset_path',feature_f])
-    prefix = feature_f[:-4].split('/')[-1]
-    resultf = 'results/CNN_sequence_input/'+prefix+'_guide_prediction_ensemble.csv'
-    #resultf = 'results/CNN_sequence_input/'+prefix+'_guides_integrated_features/test_prediction_guidelength-30_ensemble.csv'
-    subprocess.run(['python','scripts/parse_prediction_results.py',feature_f1,resultf])
+    # return file path file for final table
+    return pred_df
 
-    exit()
-
-    outf = 'results/'+feature_f1[:-4].split('/')[-1]+'_prediction_sorted.csv'
-    final_p = "static/"+outf
     subprocess.run(['mv',outf,final_p])
     subprocess.run(['rm',guide_l_in])
     subprocess.run(['rm',guide_l_out])
@@ -99,7 +99,6 @@ def run_pred(fpath):
     subprocess.run(['rm',fpath])
     return final_p # return output path
 
-    #print("done!")
 
 
 if __name__ == '__main__':
