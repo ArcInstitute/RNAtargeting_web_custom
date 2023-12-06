@@ -165,10 +165,10 @@ def predict_ensemble_test(dataset_name, model_name, saved, testset_path, guidele
         test_df = pd.DataFrame(test_predic, columns = ['spacer sequence', 'predicted_value_sigmoid'])
         
         # Save output
-        dataset_folder = os.path.join('results', dataset_name)
-        os.makedirs(dataset_folder, exist_ok=True)
-        prefix = os.path.splitext(os.path.basename(testset_path))[0]
-        outfile = os.path.join(dataset_folder, f'{prefix}_guide_prediction_ensemble.csv')
+        #dataset_folder = os.path.join('results', dataset_name)
+        #os.makedirs(dataset_folder, exist_ok=True)
+        prefix = os.path.splitext(testset_path)[0]
+        outfile = f'{prefix}_guide_prediction_ensemble.csv'
         test_df.to_csv(outfile)
 
     sys.stderr.write(f"  Predictions written to {outfile}\n")

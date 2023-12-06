@@ -9,12 +9,14 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 
 
-def make_guide_library_features(fpath):
+def make_guide_library_features(fpath, tmpdir):
     sys.stderr.write(f"Making guide library features for {fpath}\n")
 
     # I/O
     input_fasta = fpath
-    outfile_prefix = os.path.splitext(fpath)[0]
+    outfile_prefix = os.path.join(
+        tmpdir, os.path.basename(os.path.splitext(fpath)[0])
+    )
     output_gl = outfile_prefix + '_guide_library.csv'
 
     guide_dic = {} #guide sequence and features

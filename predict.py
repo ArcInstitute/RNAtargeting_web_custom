@@ -1,7 +1,8 @@
-import subprocess
-import sys
 import os
+import sys
 import tempfile
+import subprocess
+import pandas as pd
 from rnatargeting.predict import predict_ensemble_test, parse_prediction_results
 from rnatargeting.linearfold import make_guide_library_features, linearfold_integrate_results
 
@@ -34,21 +35,25 @@ def run_linearfold(infile, outfile, params = []):
         subprocess.run(['LinearFold/linearfold'] + params, stdin=inF, stdout=outF)
 
 
-def run_pred(fpath):
+def run_pred(fpath, outfile=None):
+    # Create a temporary directory
+    tmpdir = tempfile.TemporaryDirectory()
+    tmpdir_name = tmpdir.name
+
     # If input is a bytes string, write to file
     if isinstance(fpath, bytes):
-        tmpfile = os.path.join('data', 'tmp.fasta')
+        tmpfile = os.path.join(tmpdir_name, 'tmp.fasta')
         with open(tmpfile, 'w') as tmp:
             tmp.write(fpath.decode('utf-8'))
-        fpath = tmpfile
-
-    # Get basename of input file
-    fpath_prefix = os.path.splitext(fpath)[0]
+        fpath = tmpfile    
     
     # Make guide library and Linearfold input:
-    feature_files = make_guide_library_features(fpath)
+    feature_files = make_guide_library_features(fpath, tmpdir_name)
 
     # Run LinearFold
+    fpath_prefix = os.path.join(
+        tmpdir_name, os.path.basename(os.path.splitext(fpath)[0])
+    )
     ## guide mfe input
     guide_l_out = fpath_prefix + "_linfold_guides_output.txt"
     run_linearfold(feature_files['guide_input'], guide_l_out)
@@ -83,23 +88,22 @@ def run_pred(fpath):
     # Parse prediction results
     pred_df = parse_prediction_results(feature_files['guide_library'], result_f)
 
-    # return file path file for final table
+    # Clean up
+    sys.stderr.write(f"Cleaning up temporary files...\n")
+    tmpdir.cleanup()
+
+    # Write output
+    if outfile is not None:
+        outdir = os.path.dirname(fpath)
+        if outdir != '' or outdir != '.':
+            os.makedirs(outdir, exist_ok=True)
+        pred_df.to_csv(outfile)
+        sys.stderr.write(f"  Predictions written: {outfile}\n")
+
+    # Return dataframe
     return pred_df
-
-    subprocess.run(['mv',outf,final_p])
-    subprocess.run(['rm',guide_l_in])
-    subprocess.run(['rm',guide_l_out])
-    subprocess.run(['rm',target_fl_in])
-    subprocess.run(['rm',target_fl_out])
-    subprocess.run(['rm',target_fl_c_in])
-    subprocess.run(['rm',target_fl_c_out])
-    subprocess.run(['rm',feature_f1])
-    subprocess.run(['rm',feature_f])
-    subprocess.run(['rm',resultf])
-    subprocess.run(['rm',fpath])
-    return final_p # return output path
-
 
 
 if __name__ == '__main__':
-    run_pred(str(sys.argv[1]))
+    run_pred(str(sys.argv[1]), str(sys.argv[2]))
+    
