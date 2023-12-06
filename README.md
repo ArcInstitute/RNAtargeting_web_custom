@@ -2,25 +2,41 @@
 source code of the custom page for the RNA targeting website - Cas13d guide design
 
 ## Downloading and Setting up
-* Clone the repository
-```
+
+Clone the repository
+
+```bash
 git clone https://github.com/jingyi7777/RNAtargeting_web_custom.git
 ```
-* Setting up Linearfold: (Dependencies: GCC 4.8.5 or above; Python 2.7)
-```
+
+Compile the Linearfold binary
+
+```bash
 cd RNAtargeting_web_custom
 git clone https://github.com/LinearFold/LinearFold.git
 cd LinearFold
 make
 ```
-* Setting up Tensorflow2 and other packages: (Dependencies: Python 3)
-```
+
+Install python dependencies
+
+```bash
 pip3 install -r requirements.txt
 ```
 
-## Testing locally
-```
+## Test locally
+
+```bash
 python app.py
+#flask --app asana_webhooks run --port ${PORT} --debug
+```
+
+## Build the Docker image
+
+```bash
+IMG_NAME=rna-targeting-web-custom
+IMG_VERSION=0.1.0
+docker build --platform linux/amd64 -t ${IMG_NAME}:${IMG_VERSION} .
 ```
 
 ## Contents
@@ -33,3 +49,25 @@ python app.py
 * `utils.py`: Provides useful utilities for the CNN model
 * `static/`: Contains images for the website and the prediction results for guide design
 
+
+# TODO
+
+* Add class/function documentation
+* Remove old, commented-out code
+* Re-organize code for clarity
+* Add exception handling
+* Add test datasets
+* Add unit/application tests
+* Add package dependency versions
+* Change how LinearFold is installed
+* Add a ci/cd pipeline
+* Convert Flask app to FastAPI?
+  * Call API from the tool-hub website
+* Create a python package?
+* Create a well-developed CLI?
+
+## Stats
+
+* No. of Python files: 16
+* No. of functions: 97
+* Lines of code: 3212 

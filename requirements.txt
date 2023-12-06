@@ -13,12 +13,12 @@ pyasn1-modules
 pyparsing
 scikit-learn
 seaborn
-tensorflow>=2
+tensorflow
 tensorboard-plugin-wit
 termcolor
 threadpoolctl
 urllib3
 wrapt
 yarl
-tensorflow-addons
-mysql-connector-python
+#tensorflow-addons
+#mysql-connector-python

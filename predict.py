@@ -1,45 +1,65 @@
 import subprocess
 import sys
-#import os
+import os
+import tempfile
+from rnatargeting.linearfold import make_guide_library_features, linearfold_integrate_results
 
 
+def run_subprocess(cmd):
+    try:
+        # Start the subprocess
+        process = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, 
+            stderr=subprocess.PIPE, 
+            text=True
+        )
 
-def run_pred(filepath):
-	#my_env = os.environ.copy()
-	#'/usr/sbin:/sbin:'
-    fpath = filepath # input fasta path, should be in the "dataset" folder, and named as "dataset/\<mygenes\>.fasta"
-    #prefix = ('.'.join(fpath.split('.')[:-1])).split('/')[-1] # gene name
+        # Wait for the process to complete and capture output and errors
+        stdout, stderr = process.communicate() 
 
+        # Check if the subprocess was successful
+        if process.returncode != 0:
+            print("Error:", stderr)
+        else:
+            print("Output:", stdout)
+    except Exception as e:
+        return f"An unexpected error occurred: {e}"
+    return stdout
+
+def run_linearfold(infile, outfile, params = []):
+    sys.stderr.write(f"Running LinearFold on {infile}\n")
+    with open(infile) as inF, open(outfile, 'w') as outF:
+        subprocess.run(['LinearFold/linearfold'] + params, stdin=inF, stdout=outF)
+
+def run_pred(fpath):
+    fpath_prefix = os.path.splitext(fpath)[0]
+    
     # Make guide library and Linearfold input:
-    subprocess.run(['python','scripts/make_guide_library_features.py',fpath])
+    feature_files = make_guide_library_features(fpath)
 
-    # run Linearfold
-    #subprocess.run(['cd','LinearFold'])
-    # guide mfe input
-    guide_l_in = '.'.join(fpath.split('.')[:-1])+"_linfold_guides_input.fasta"
-    guide_l_out = '.'.join(fpath.split('.')[:-1])+"_linfold_guides_output.txt"
-    p1 = subprocess.Popen(['cat', guide_l_in], stdout=subprocess.PIPE)
-    fout = open(guide_l_out, 'w')
-    #p2 = subprocess.run(['Linearfold/./linearfold'], stdin=p1.stdout, stdout=fout)
-    p2 = subprocess.run(['LinearFold/linearfold'], stdin=p1.stdout, stdout=fout)
-    # target with 15nt flanks
-    target_fl_in = '.'.join(fpath.split('.')[:-1])+"_linfold_guides_nearby15_input.fasta"
-    target_fl_out = '.'.join(fpath.split('.')[:-1])+"_linfold_target_flank15_output.txt"
-    p3 = subprocess.Popen(['cat', target_fl_in], stdout=subprocess.PIPE)
-    fout2 = open(target_fl_out, 'w')
-    #p4 = subprocess.run(['Linearfold/./linearfold'], stdin=p3.stdout, stdout=fout2)
-    p4 = subprocess.run(['LinearFold/linearfold'], stdin=p3.stdout, stdout=fout2)
-    # target with constraints
-    target_fl_c_in = '.'.join(fpath.split('.')[:-1])+"_linfold_guides_constraints_nearby15_input.fasta"
-    target_fl_c_out = '.'.join(fpath.split('.')[:-1])+"_linfold_constraints_target_flank15_output.txt"
-    p5 = subprocess.Popen(['cat', target_fl_c_in], stdout=subprocess.PIPE)
-    fout3 = open(target_fl_c_out, 'w')
-    #p6 = subprocess.run(['Linearfold/./linearfold','--constraints'], stdin=p5.stdout, stdout=fout3)
-    p6 = subprocess.run(['LinearFold/linearfold','--constraints'], stdin=p5.stdout, stdout=fout3)
-    #subprocess.run(['cd','..'])
-    feature_f1 = '.'.join(fpath.split('.')[:-1])+'_guide_library.csv'
-    subprocess.run(['python','scripts/linearfold_integrate_results.py',feature_f1])
-    feature_f = '.'.join(fpath.split('.')[:-1]) + '_guides_integrated_features.csv'
+    # Run LinearFold
+    ## guide mfe input
+    guide_l_out = fpath_prefix + "_linfold_guides_output.txt"
+    run_linearfold(feature_files['guide_input'], guide_l_out)
+
+    ## target with 15nt flanks
+    target_fl_out = fpath_prefix + "_linfold_target_flank15_output.txt"
+    run_linearfold(feature_files['target_flank_input'], target_fl_out)
+
+    ## target with constraints
+    target_fl_c_out = fpath_prefix + "_linfold_constraints_target_flank15_output.txt"
+    run_linearfold(feature_files['target_flank_c_input'], target_fl_c_out, params = ['--constraints'])
+
+    # Integrate Linearfold results
+    feature_f = linearfold_integrate_results(
+        feature_files['guide_library'], 
+        guide_l_out,
+        target_fl_out,
+        target_fl_c_out,
+        fpath_prefix
+    )
+    exit()
+
     # Predict guide efficiency using the CNN model
     subprocess.run(['python3','predict_ensemble_test.py','--dataset','CNN_sequence_input','--model','guide_nolin_threef',
         '--saved','saved_model/sequence_only_input_3f','--testset_path',feature_f])
@@ -47,6 +67,9 @@ def run_pred(filepath):
     resultf = 'results/CNN_sequence_input/'+prefix+'_guide_prediction_ensemble.csv'
     #resultf = 'results/CNN_sequence_input/'+prefix+'_guides_integrated_features/test_prediction_guidelength-30_ensemble.csv'
     subprocess.run(['python','scripts/parse_prediction_results.py',feature_f1,resultf])
+
+    exit()
+
     outf = 'results/'+feature_f1[:-4].split('/')[-1]+'_prediction_sorted.csv'
     final_p = "static/"+outf
     subprocess.run(['mv',outf,final_p])
@@ -65,5 +88,5 @@ def run_pred(filepath):
     #print("done!")
 
 
-# if __name__ == '__main__':
-#     main(str(sys.argv[1]))
+if __name__ == '__main__':
+    run_pred(str(sys.argv[1]))

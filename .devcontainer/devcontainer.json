@@ -1,0 +1,34 @@
+{
+    "name": "rnatargeting",
+    "build": {
+        "dockerfile": "../Dockerfile",
+        "context": "..",
+        "args": {
+            "VARIANT": "3.9",
+            "INSTALL_NODE": "true",
+            "NODE_VERSION": "lts/*"
+        }
+    },
+    "extensions": [
+        "github.copilot",
+        "ms-python.python",
+        "ms-azuretools.vscode-docker",
+        "codezombiech.gitignore",
+        "Gruntfuggly.todo-tree",
+        "redhat.vscode-yaml",
+        "george-alisson.html-preview-vscode"
+    ],
+    "settings": {
+        "python.pythonPath": "/usr/local/bin/python",
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": true
+    },
+    "forwardPorts": [
+        5000
+    ],
+    "features": {
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {
+        "version": "latest"
+        }
+    }
+}
