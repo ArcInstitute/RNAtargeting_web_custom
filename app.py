@@ -18,7 +18,7 @@ def get_image_as_base64(path):
 
 # App init
 st.set_page_config(
-    page_title="",
+    page_title="RNA Targeting",
     page_icon="img/arc-logo.ico",
     layout="centered",
     initial_sidebar_state="auto",
@@ -45,12 +45,12 @@ st.markdown("""
 
 # Main
 ## Title
-image_base64 = get_image_as_base64("img/arc-logo.png")
+image_base64 = get_image_as_base64("img/arc-logo-white.png")
 st.markdown(
     f"""
     <div style="display: flex; align-items: center;">
         <a href="https://arcinstitute.org/" target="_blank">
-            <img src="{image_base64}" alt="ARC Institute Logo" style="vertical-align: middle; margin-right: 10px;" width="100" height="100">
+            <img src="{image_base64}" alt="ARC Institute Logo" style="vertical-align: middle; margin-right: 10px;" width="85" height="85">
         </a>
         <span class='font-castoro'>
                 <h2>Predict custom sequence Cas13d guide efficiency</h2>
