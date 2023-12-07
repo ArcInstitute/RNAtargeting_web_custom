@@ -50,10 +50,10 @@ st.markdown(
     f"""
     <div style="display: flex; align-items: center;">
         <a href="https://arcinstitute.org/" target="_blank">
-            <img src="{image_base64}" alt="ARC Institute Logo" style="vertical-align: middle; margin-right: 10px;" width="85" height="85">
+            <img src="{image_base64}" alt="ARC Institute Logo" style="vertical-align: middle; margin-left: 15px; margin-right: 30px;" width="65" height="65">
         </a>
         <span class='font-castoro'>
-                <h2>Predict custom sequence Cas13d guide efficiency</h2>
+            <h2>Custom Sequence Cas13d Guide Efficiency Prediction</h2>
         </span>
     </div>
     """, unsafe_allow_html=True
@@ -63,12 +63,16 @@ st.markdown(
     """
     <div class='font-ibm-plex-sans'>
 
-    Here, we provide an interface of CasRx guide design for custom input sequences.
+    <h5>This interface provides CasRx guide design for custom input sequences.</h5>
 
+    <strong>Guidance:</strong>
     <ul>
-      <li>For best results, please input the ENTIRE target sequence to enable local target structure prediction and selection of the recommended best guides. If you are only interested in a short region on a target sequence, you can further process our results and pick guides in your region of interest.</li>
+      <li>For best results, please input the ENTIRE target sequence to enable local target structure prediction and selection of the best recommended guides.</li>
+      <ul>
+        <li>If you are only interested in a short region on a target sequence, you can further process our results and pick guides in your region of interest.</li>
+      </ul>
       <li>We recommend an input sequence of at least 60nt, and ideally >200nt.</li>
-      <li>If you can find your gene in our precomputed page, we recommend you to use the results there, because the custom input model does not utilize information like CDS location, splice variants or relative target positions in the full transcript.</li>
+      <li>Make sure to check if your gene is available in our main tool before using our custom input model as it does not use information like CDS location, splice variants or relative target positions in the full transcript.</li>
     </ul>
     </div>
     """, unsafe_allow_html=True
