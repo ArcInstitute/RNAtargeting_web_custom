@@ -1,37 +1,35 @@
-# #FROM debian:latest as linfold_builder
-# FROM ubuntu:18.04 as linfold_builder
-
-# RUN apt-get update && apt-get install -y git gcc g++ make
-
-# WORKDIR /app-docker
-# RUN git clone https://github.com/LinearFold/LinearFold.git
-# WORKDIR /app-docker/LinearFold
-# RUN make && apt-get clean
-
-#FROM debian:latest
+# Use an official Python runtime as a base image
 FROM python:3.9-slim-buster
 
+# Set the working directory in the container
 WORKDIR /app
 
-COPY requirements.txt .
-
+# Install system dependencies
 RUN apt-get update \
     && apt-get install -y python3 python3-pip nginx uwsgi uwsgi-plugin-python3 vim less \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --upgrade pip \
-    && pip3 install -r requirements.txt
+# Copy the requirements.txt file into the container
+COPY requirements.txt .
 
-COPY nginx.conf /etc/nginx/nginx.conf
+# Install Python dependencies
+RUN pip3 install -r requirements.txt
 
-RUN ln -s /usr/bin/python3 /usr/bin/python && \
-    ln -s /usr/bin/pip3 /usr/bin/pip
+# Copy the app files into the container
+COPY rnatargeting/ ./rnatargeting/
+COPY LinearFold/ ./LinearFold/
+COPY saved_model/ ./saved_model/
+COPY .streamlit/ ./.streamlit/
+COPY app.py ./
 
-EXPOSE 80
+# Make port ${PORT} available to the world outside this container
+EXPOSE ${PORT}
 
-ENTRYPOINT [""]
-#ENTRYPOINT nginx -g "daemon on;" && uwsgi --ini uwsgi.ini
-
-CMD [""]
-#CMD [ "/bin/bash"]
+# Run the app when the container launches
+CMD sh -c "streamlit run app.py \
+  --server.headless true \
+  --server.fileWatcherType none \
+  --browser.gatherUsageStats false \
+  --server.port=${PORT} \
+  --server.address=0.0.0.0"

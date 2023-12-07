@@ -1,28 +1,103 @@
 # Import
 import os
 import sys
-#import importlib
+import tempfile
 import pkg_resources
 import numpy as np
 import pandas as pd
 import sklearn
+import subprocess
 import tensorflow as tf
 from tensorflow import keras
 import keras
-#from dataset import find_dataset_generator_using_name
-#from options.options import get_arguments
-#from rnatargeting.utils import *
-from rnatargeting.utils import encoded_nuc_to_str
-from rnatargeting.models.find import find_model_using_name
+from rnatargeting.utils import run_subprocess, encoded_nuc_to_str
+from rnatargeting.linearfold import make_guide_library_features, linearfold_integrate_results
 from rnatargeting.models.models import guide_nolin_ninef_model, guide_nolin_threef_model
 from rnatargeting.dataset.generators import CNN_sequence_input_dataset, CNN_all_features_input_dataset
+
 
 # Set random seeds
 tf.random.set_seed(0)
 np.random.seed(0)
 
-
 # Functions
+def run_pred(fpath, outfile=None):
+    # Create a temporary directory
+    tmpdir = tempfile.TemporaryDirectory()
+    tmpdir_name = tmpdir.name
+
+    # If input is a bytes string, write to file
+    if isinstance(fpath, bytes):
+        tmpfile = os.path.join(tmpdir_name, 'tmp.fasta')
+        with open(tmpfile, 'w') as tmp:
+            tmp.write(fpath.decode('utf-8'))
+        fpath = tmpfile    
+    
+    # Make guide library and Linearfold input:
+    feature_files = make_guide_library_features(fpath, tmpdir_name)
+
+    # Run LinearFold
+    fpath_prefix = os.path.join(
+        tmpdir_name, os.path.basename(os.path.splitext(fpath)[0])
+    )
+    ## guide mfe input
+    guide_l_out = fpath_prefix + "_linfold_guides_output.txt"
+    run_linearfold(feature_files['guide_input'], guide_l_out)
+
+    ## target with 15nt flanks
+    target_fl_out = fpath_prefix + "_linfold_target_flank15_output.txt"
+    run_linearfold(feature_files['target_flank_input'], target_fl_out)
+
+    ## target with constraints
+    target_fl_c_out = fpath_prefix + "_linfold_constraints_target_flank15_output.txt"
+    run_linearfold(feature_files['target_flank_c_input'], target_fl_c_out, params = ['--constraints'])
+
+    # Integrate Linearfold results
+    feature_f = linearfold_integrate_results(
+        feature_files['guide_library'], 
+        guide_l_out,
+        target_fl_out,
+        target_fl_c_out,
+        fpath_prefix
+    )
+
+    # Predict guide efficiency using the CNN model
+    result_f = predict_ensemble_test(
+        dataset_name='CNN_sequence_input', 
+        model_name='guide_nolin_threef',
+        saved='saved_model/sequence_only_input_3f',
+        testset_path=feature_f,
+        guidelength=30,
+        flanklength=15
+    )
+
+    # Parse prediction results
+    pred_df = parse_prediction_results(feature_files['guide_library'], result_f)
+
+    # Clean up
+    sys.stderr.write(f"Cleaning up temporary files...\n")
+    tmpdir.cleanup()
+
+    # Write output
+    if outfile is not None:
+        outdir = os.path.dirname(fpath)
+        if outdir != '' or outdir != '.':
+            os.makedirs(outdir, exist_ok=True)
+        pred_df.to_csv(outfile, index=False)
+        sys.stderr.write(f"  Predictions written: {outfile}\n")
+
+    # Return dataframe
+    return pred_df
+
+
+
+def run_linearfold(infile, outfile, params = []):
+    sys.stderr.write(f"Running LinearFold on {infile}\n")
+    with open(infile) as inF, open(outfile, 'w') as outF:
+        subprocess.run(['LinearFold/linearfold'] + params, stdin=inF, stdout=outF)
+
+
+
 def find_dataset_generator_using_name(dataset_generator_name):
     """Import the module "models/[model_name]_model.py".
 

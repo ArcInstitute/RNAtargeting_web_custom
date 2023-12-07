@@ -45,6 +45,27 @@ linearfold_positions = {
 RESULTS_DIR = 'results/'
 
 
+def run_subprocess(cmd):
+    try:
+        # Start the subprocess
+        process = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, 
+            stderr=subprocess.PIPE, 
+            text=True
+        )
+
+        # Wait for the process to complete and capture output and errors
+        stdout, stderr = process.communicate() 
+
+        # Check if the subprocess was successful
+        if process.returncode != 0:
+            print("Error:", stderr)
+        else:
+            print("Output:", stdout)
+    except Exception as e:
+        return f"An unexpected error occurred: {e}"
+    return stdout
+
 def encoded_nuc_to_str(encoded_seq):
     indices = np.argmax(encoded_seq, axis=1)
     return ''.join([base_positions[i] for i in indices])

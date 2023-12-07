@@ -1,43 +1,30 @@
-# RNAtargeting_web_custom
-source code of the custom page for the RNA targeting website - Cas13d guide design
+RNAtargeting_web_custom
+=======================
 
-## Downloading and Setting up
+Source code of the custom page for the RNA targeting website - Cas13d guide design
 
-Clone the repository
+> WARNING: this is a work in progress; the API could change at any time
 
-```bash
-git clone https://github.com/jingyi7777/RNAtargeting_web_custom.git
-```
-
-Compile the Linearfold binary
+# Run the app locally
 
 ```bash
-cd RNAtargeting_web_custom
-git clone https://github.com/LinearFold/LinearFold.git
-cd LinearFold
-make
+streamlit run app.py
 ```
 
-Install python dependencies
+# Dev 
+
+It's best to use the .devcontainer to develop this project.
+It has all the dependencies installed and configured.
+
+## Run tests
 
 ```bash
-pip3 install -r requirements.txt
+pytest -s tests
 ```
 
-## Test locally
+***
 
-```bash
-python app.py
-#flask --app asana_webhooks run --port ${PORT} --debug
-```
-
-## Build the Docker image
-
-```bash
-IMG_NAME=rna-targeting-web-custom
-IMG_VERSION=0.1.0
-docker build --platform linux/amd64 -t ${IMG_NAME}:${IMG_VERSION} .
-```
+# OLD 
 
 ## Contents
 * `app.py`: FLASK app script
@@ -50,24 +37,3 @@ docker build --platform linux/amd64 -t ${IMG_NAME}:${IMG_VERSION} .
 * `static/`: Contains images for the website and the prediction results for guide design
 
 
-# TODO
-
-* Add class/function documentation
-* Remove old, commented-out code
-* Re-organize code for clarity
-* Add exception handling
-* Add test datasets
-* Add unit/application tests
-* Add package dependency versions
-* Change how LinearFold is installed
-* Add a ci/cd pipeline
-* Convert Flask app to FastAPI?
-  * Call API from the tool-hub website
-* Create a python package?
-* Create a well-developed CLI?
-
-## Stats
-
-* No. of Python files: 16
-* No. of functions: 97
-* Lines of code: 3212 
