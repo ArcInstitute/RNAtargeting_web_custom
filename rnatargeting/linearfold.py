@@ -25,25 +25,33 @@ def make_guide_library_features(fpath, tmpdir):
     )
     output_gl = outfile_prefix + '_guide_library.csv'
 
-    guide_dic = {} #guide sequence and features
     # handle multiple fasta sequences, support different genes (but don't put different isoform sequences for the same gene!)
+    guide_dic = {} #guide sequence and features
+    regex_nuc = re.compile(r'^[atgcuATGCU]+$')
     for record in SeqIO.parse(input_fasta, "fasta"):
         # parse seq info
         sequence = record.seq
         transcript_ID = record.id
-        title = str(record.description)
+        
+        # check sequence format
+        if not regex_nuc.match(str(sequence)):
+            raise ValueError(
+                f"Sequence {transcript_ID} contains non-nucleotide characters"
+            )
 
         # design guides
         gene_guide_dic = {} #gene-specific guide dic
         trans_seq = sequence
         for i in range(0,len(trans_seq)-29):
+            # Set target seq and spacer seq
             target = trans_seq[i:i+30]
             spacer = target.reverse_complement()
-            # replace U and upper
+
+            # Replace U and upper
             spacer = (str(spacer)).upper()
             spacer = spacer.replace("U", "T")
 
-            # set flanking seq
+            # Set flanking seq
             if (i != 0) and (i != len(trans_seq)-30):
                 left_seq_15 = trans_seq[max(0,(i-15)):i]
                 right_seq_15 = trans_seq[i+30:min((i+45),len(trans_seq))]
@@ -54,28 +62,40 @@ def make_guide_library_features(fpath, tmpdir):
                 left_seq_15 = trans_seq[max(0,(i-15)):i]
                 right_seq_15 = ''
             nearby_seq_all_15 = left_seq_15 + target + right_seq_15 #target seq+flanks
-            # replace U and upper
+
+            # Replace U and make uppercase
             nearby_seq_all_15 = (str(nearby_seq_all_15)).upper()
             nearby_seq_all_15 = nearby_seq_all_15.replace("U", "T")
             target = (str(target)).upper()
             target = target.replace("U", "T")
 
-            if str(spacer) not in gene_guide_dic.keys(): #first occur
-                gene_guide_dic[str(spacer)]=[str(transcript_ID),str(spacer),[i],1]+[str(target),str(nearby_seq_all_15)]
-                                            #transcript_id, spacer,pos_list,target_pos_num,
-                                            # target seq, target seq with 15nt flanks 
-            else: #guide targeting the same transcript
+            # Add to gene_guide_dic
+            if str(spacer) not in gene_guide_dic.keys(): 
+                # first occurrance of guide
+                gene_guide_dic[str(spacer)] = [
+                        str(transcript_ID), str(spacer), [i], 1
+                    ] + [
+                        str(target), str(nearby_seq_all_15)
+                    ]
+            else: 
+                # Another guide targeting the same transcript
                 gene_guide_dic[str(spacer)][2].append(i)
                 gene_guide_dic[str(spacer)][3] += 1
         
-        # add to guide_dic
+        # Add to guide dict
         for guide in gene_guide_dic.keys():
             if guide not in guide_dic.keys():
                 guide_dic[guide] = gene_guide_dic[guide]
             else: #guide target other genes
-                guide_dic.pop(guide) #remove the guide with off targets
+                guide_dic.pop(guide) #remove the guide with off-targets
     
-    # write to csv
+    # Check that guide library is not empty
+    if len(guide_dic) == 0:
+        raise ValueError(
+            "No valid nucleotide sequences found in the fasta file!"
+        )
+
+    # Write to csv
     with open(output_gl, 'w') as outF:
         writer = csv.writer(outF)
         writer.writerow([
@@ -85,8 +105,8 @@ def make_guide_library_features(fpath, tmpdir):
         for g in guide_dic.keys():
             writer.writerow(guide_dic[g])
 
-    # make Linearfold input files
-    # guide mfe input
+    # Make Linearfold input files
+    ## Guide mfe input
     standard_prefix = "CAAGTAAACCCCTACCAACTGGTCGGGGTTTGAAAC"
     df = pd.read_csv(output_gl)
     num_examples = len(df['guide'].values)
@@ -98,8 +118,8 @@ def make_guide_library_features(fpath, tmpdir):
             outF.write(">guide #" + str(i + 1) + ", " +  df.iloc[i, 0] + "\n")
             outF.write(standard_prefix + guideseq[i] + "\n")
 
-    #target with flank 15 nt
-    ## native
+    # Target with flank 15 nt
+    ## Native
     nearby_seq_all = df['nearby_seq_all_15'].values
     outfile_nb = outfile_prefix + "_linfold_guides_nearby15_input.fasta"
     with open(outfile_nb, 'w') as outF:
@@ -107,7 +127,7 @@ def make_guide_library_features(fpath, tmpdir):
             outF.write(">guide #" + str(i + 1) + ", " +  df.iloc[i, 0] + "\n")
             outF.write(nearby_seq_all[i] + "\n")
             
-    ## with constraints
+    ## With constraints
     guide_rv = df['target_seq'].values
     outfile_nbc = outfile_prefix + "_linfold_guides_constraints_nearby15_input.fasta"
     with open(outfile_nbc, 'w') as outF:
@@ -118,7 +138,7 @@ def make_guide_library_features(fpath, tmpdir):
             constraints = "?" * target_index + "." * 30 + "?" * (len(nearby_seq_all[i]) - 30 - target_index)
             outF.write(constraints + "\n")
     
-    # return output file paths
+    # Return output file paths
     return {
         'guide_library' : output_gl,
         'guide_input' : outfile_gi,

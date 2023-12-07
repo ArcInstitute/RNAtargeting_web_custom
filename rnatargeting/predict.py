@@ -3,12 +3,11 @@
 import os
 import sys
 import tempfile
-import pkg_resources
+import uuid
 ## 3rd party
 import numpy as np
 import pandas as pd
 import sklearn
-import subprocess
 import tensorflow as tf
 from tensorflow import keras
 import keras
@@ -38,7 +37,7 @@ def run_pred(fpath, outfile=None):
 
     # If input is a bytes string, write to file
     if isinstance(fpath, bytes):
-        tmpfile = os.path.join(tmpdir_name, 'tmp.fasta')
+        tmpfile = os.path.join(tmpdir_name, str(uuid.uuid4()) + '.fasta')
         with open(tmpfile, 'w') as tmp:
             tmp.write(fpath.decode('utf-8'))
         fpath = tmpfile    
@@ -192,26 +191,25 @@ def predict_ensemble_test(dataset_name, model_name, saved, testset_path,
     # Status
     sys.stderr.write(f"Running ensemble prediction...\n")
 
-    # Check for saved model
+    # Create dataset generator for loading test set
     test_dataset = create_dataset_generator(dataset_name, testset_path)
+    # Run prediction
     if saved is None:
+        # Create new model
         sys.stderr.write(f"No saved model provided; creating new model...\n")
-        #return "No saved model provided"
-        # Create model
-        #model_generator = find_model_using_name(model)
         model = create_model(model_name, guidelength=guidelength)
-        #dataset_generator = find_dataset_generator_using_name(dataset)
         outfile = None
     else:
+        # Load saved model
         sys.stderr.write(f"Loading saved model...\n")
-        # get folds
+        # Get number of folds
         if model_name == 'guide_nolin_ninef':
             k_folds = 9
         elif model_name == 'guide_nolin_threef':
             k_folds = 3
         else:
             raise ValueError(f'Model name not recognized: {model_name}')
-        # load models and predict for each fold
+        # Load models and predict for each fold
         predict_allf = []
         for k in range(k_folds):
             model_path = os.path.join(saved, f'fold_{k}')
@@ -231,14 +229,14 @@ def predict_ensemble_test(dataset_name, model_name, saved, testset_path,
 
         # Format
         predict_allf = np.array(predict_allf)
-        ## mean across ensemble members
+        ## Calc mean across ensemble members
         predict_mean = np.mean(predict_allf, axis=0)
-        ## sigmoid
+        ## Calc sigmoid of mean
         outputs = np.array(list(tf.sigmoid(predict_mean).numpy().flat))
-        # parse test_dataset
+        # Parse the test set
         test_inputs = [inputs for (inputs, label) in test_dataset.unbatch()]
 
-        # Parsing inputs
+        # Parse inputs
         if len(test_inputs[0]) == 2:
             test_sequences = [np.array(sequences) for (sequences, features) in test_inputs]
             test_features = [features for (sequences, features) in test_inputs]
