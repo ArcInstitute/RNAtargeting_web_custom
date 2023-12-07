@@ -21,6 +21,7 @@ COPY rnatargeting/ ./rnatargeting/
 COPY LinearFold/ ./LinearFold/
 COPY saved_model/ ./saved_model/
 COPY .streamlit/ ./.streamlit/
+COPY img/ ./img/
 COPY app.py ./
 
 # Make port ${PORT} available to the world outside this container

@@ -1,6 +1,8 @@
 # import
 import os
+import base64
 ## 3rd party
+from PIL import Image
 import streamlit as st
 ## App
 from rnatargeting.predict import run_pred
@@ -8,10 +10,16 @@ from rnatargeting.predict import run_pred
 # Init variables
 fasta_file = None
 
+# functions
+def get_image_as_base64(path):
+    with open(path, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode()
+    return "data:image/png;base64," + encoded_string
+
 # App init
 st.set_page_config(
     page_title="",
-    page_icon="🧬",
+    page_icon="img/arc-logo.ico",
     layout="centered",
     initial_sidebar_state="auto",
     menu_items=None
@@ -36,14 +44,21 @@ st.markdown("""
 )
 
 # Main
-## Description
+## Title
+image_base64 = get_image_as_base64("img/arc-logo.png")
 st.markdown(
-    """
-    <div class='font-castoro'>
-    <h2>Predict custom sequence Cas13d guide efficiency</h2>
+    f"""
+    <div style="display: flex; align-items: center;">
+        <a href="https://arcinstitute.org/" target="_blank">
+            <img src="{image_base64}" alt="ARC Institute Logo" style="vertical-align: middle; margin-right: 10px;" width="100" height="100">
+        </a>
+        <span class='font-castoro'>
+                <h2>Predict custom sequence Cas13d guide efficiency</h2>
+        </span>
     </div>
     """, unsafe_allow_html=True
 )
+## Description
 st.markdown(
     """
     <div class='font-ibm-plex-sans'>
