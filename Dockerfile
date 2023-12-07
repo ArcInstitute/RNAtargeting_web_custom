@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update \
-    && apt-get install -y python3 python3-pip nginx uwsgi uwsgi-plugin-python3 vim less \
+    && apt-get install -y python3 python3-pip git \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -16,9 +16,13 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip3 install -r requirements.txt
 
+# Install LinearFold
+RUN git clone https://github.com/LinearFold/LinearFold.git \
+    && cd LinearFold \
+    && make
+
 # Copy the app files into the container
 COPY rnatargeting/ ./rnatargeting/
-COPY LinearFold/ ./LinearFold/
 COPY saved_model/ ./saved_model/
 COPY .streamlit/ ./.streamlit/
 COPY img/ ./img/

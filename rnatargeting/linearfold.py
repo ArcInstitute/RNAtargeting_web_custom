@@ -2,12 +2,18 @@ import os
 import re
 import sys
 import csv
+import subprocess
 from typing import TextIO
 import numpy as np
 import pandas as pd
 from Bio import SeqIO
 from Bio.Seq import Seq
 
+
+def run_linearfold(infile, outfile, params = []):
+    sys.stderr.write(f"Running LinearFold on {infile}\n")
+    with open(infile) as inF, open(outfile, 'w') as outF:
+        subprocess.run(['LinearFold/linearfold'] + params, stdin=inF, stdout=outF)
 
 def make_guide_library_features(fpath, tmpdir):
     sys.stderr.write(f"Making guide library features for {fpath}\n")

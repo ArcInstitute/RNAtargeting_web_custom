@@ -67,10 +67,11 @@ st.markdown(
 
     <strong>Guidance:</strong>
     <ul>
-      <li>For best results, please input the ENTIRE target sequence to enable local target structure prediction and selection of the best recommended guides.</li>
-      <ul>
-        <li>If you are only interested in a short region on a target sequence, you can further process our results and pick guides in your region of interest.</li>
-      </ul>
+      <li>For best results, please input the ENTIRE target sequence to enable local target structure prediction and selection of the best recommended guides.
+        <ul>
+            <li>If you are only interested in a short region on a target sequence, you can further process our results and pick guides in your region of interest.</li>
+        </ul>
+      </li>
       <li>We recommend an input sequence of at least 60nt, and ideally >200nt.</li>
       <li>Make sure to check if your gene is available in our main tool before using our custom input model as it does not use information like CDS location, splice variants or relative target positions in the full transcript.</li>
     </ul>
@@ -79,7 +80,7 @@ st.markdown(
 )
 
 ## File upload
-fasta_file = st.file_uploader('Upload a fasta file')
+fasta_file = st.file_uploader('Upload a nucleotide fasta file')
 ## Predict & display results
 if fasta_file is not None:
     with st.spinner("Calculating..."):

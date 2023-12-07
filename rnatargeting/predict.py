@@ -1,8 +1,10 @@
 # Import
+## Batteries
 import os
 import sys
 import tempfile
 import pkg_resources
+## 3rd party
 import numpy as np
 import pandas as pd
 import sklearn
@@ -10,11 +12,11 @@ import subprocess
 import tensorflow as tf
 from tensorflow import keras
 import keras
+## App
 from rnatargeting.utils import run_subprocess, encoded_nuc_to_str
-from rnatargeting.linearfold import make_guide_library_features, linearfold_integrate_results
+from rnatargeting.linearfold import run_linearfold, make_guide_library_features, linearfold_integrate_results
 from rnatargeting.models.models import guide_nolin_ninef_model, guide_nolin_threef_model
 from rnatargeting.dataset.generators import CNN_sequence_input_dataset, CNN_all_features_input_dataset
-
 
 # Set random seeds
 tf.random.set_seed(0)
@@ -22,6 +24,14 @@ np.random.seed(0)
 
 # Functions
 def run_pred(fpath, outfile=None):
+    """
+    Main function for running prediction on a FASTA file.
+    Args:
+        fpath: path to FASTA file
+        outfile: path to output CSV file
+    Returns:
+        pred_df: dataframe of predictions
+    """
     # Create a temporary directory
     tmpdir = tempfile.TemporaryDirectory()
     tmpdir_name = tmpdir.name
@@ -89,52 +99,29 @@ def run_pred(fpath, outfile=None):
     # Return dataframe
     return pred_df
 
-
-
-def run_linearfold(infile, outfile, params = []):
-    sys.stderr.write(f"Running LinearFold on {infile}\n")
-    with open(infile) as inF, open(outfile, 'w') as outF:
-        subprocess.run(['LinearFold/linearfold'] + params, stdin=inF, stdout=outF)
-
-
-
-def find_dataset_generator_using_name(dataset_generator_name):
-    """Import the module "models/[model_name]_model.py".
-
-    In the file, the class called DatasetNameModel() will
-    be instantiated. It has to be a subclass of BaseModel,
-    and it is case-insensitive.
-    """
-    dataset_filename = "dataset." + dataset_generator_name + "_dataset"
-    datasetlib = importlib.import_module(dataset_filename)
-    dataset_generator = None
-    target_dataset_name = dataset_generator_name + '_dataset'
-    for name, potential_model_creator in datasetlib.__dict__.items():
-        if name.lower() == target_dataset_name.lower():
-            dataset_generator = potential_model_creator
-
-    if dataset_generator is None:
-        print("In %s.py, there should be a func with name that matches %s in lowercase." % (
-            dataset_filename, target_dataset_name))
-        exit(0)
-
-    return dataset_generator
-
 def logits_mean_absolute_error(y_true, y_pred):
+    """
+    Custom loss function for regression: mean absolute error of logits
+    """
     y_pred = tf.sigmoid(y_pred)
     return keras.metrics.mean_absolute_error(y_true, y_pred)
 
 def logits_mean_squared_error(y_true, y_pred):
+    """
+    Custom loss function for regression: mean squared error of logits
+    """
     y_pred = tf.sigmoid(y_pred)
     return keras.metrics.mean_squared_error(y_true, y_pred)
 
-def wbce(y_true, y_pred, weight1 = 1, weight0 = 1) :
-    y_true = tf.keras.clip(y_true, K.epsilon(), 1-K.epsilon())
-    y_pred = tf.keras.clip(y_pred, K.epsilon(), 1-K.epsilon())
-    logloss = -(y_true * K.log(y_pred) * weight1 + (1 - y_true) * K.log(1 - y_pred) * weight0 )
-    return tf.keras.mean( logloss, axis=-1)
-
 def create_model(model_name, guidelength):
+    """
+    Create a Keras model, based on the model name.
+    Args:
+        model_name (str): name of the model
+        guidelength (int): length of the guide
+    Returns:
+        model (keras.Model): Keras model
+    """
     if model_name == 'guide_nolin_threef':
         model = guide_nolin_threef_model(guidelength)
     elif model_name == 'guide_nolin_ninef':
@@ -144,6 +131,15 @@ def create_model(model_name, guidelength):
     return model
 
 def create_dataset_generator(dataset_name, testset_path):
+    """
+    Create a dataset generator, based on the dataset name.
+    The dataset generator is used to load the test set to the model.
+    Args:
+        dataset_name (str): name of the dataset generator
+        testset_path (str): path to test set
+    Returns:
+        dataset (BaseDatasetGenerator): dataset generator
+    """
     if dataset_name == 'CNN_sequence_input':
         dataset = CNN_sequence_input_dataset(testset_path)
     elif dataset_name == 'CNN_all_features_input':
@@ -153,6 +149,15 @@ def create_dataset_generator(dataset_name, testset_path):
     return dataset
 
 def parse_prediction_results(feature_df_file, pred_df_file):
+    """
+    Parse model prediction results and create a dataframe
+    of predictions sorted by rank.
+    Args:
+        feature_df_file (str): path to feature dataframe
+        pred_df_file (str): path to prediction dataframe
+    Returns:
+        df_sorted (pd.DataFrame): sorted dataframe
+    """
     sys.stderr.write('Parsing prediction results...\n')
     # Load guide feature dataframe
     df_info= pd.read_csv(feature_df_file)[['transcript id','guide','target_pos_list','target pos num']]
@@ -167,14 +172,23 @@ def parse_prediction_results(feature_df_file, pred_df_file):
     # return data.frame
     return df_sorted
 
-    # # Save results
-    # prefix = os.path.splitext(os.path.basename(feature_df_file))[0]
-    # outfile = os.path.join('results', f'{prefix}_prediction_sorted.csv')
-    # df_sorted.to_csv(outfile, index=False)
-    # sys.stderr.write(f"  Predictions written: {outfile}\n")
-    # return outfile
-
-def predict_ensemble_test(dataset_name, model_name, saved, testset_path, guidelength, flanklength, regression=False):
+def predict_ensemble_test(dataset_name, model_name, saved, testset_path, 
+                          guidelength, flanklength, regression=False):
+    """
+    Conduct model prediction on a test set using a new or saved model.
+    An ensemble of models is used for prediction.
+    The average of the predictions is taken as the final prediction.
+    Args:
+        dataset_name (str): name of the dataset generator
+        model_name (str): name of the model
+        saved (str): path to saved model
+        testset_path (str): path to test set
+        guidelength (int): length of the guide
+        flanklength (int): length of the flanking sequence
+        regression (bool): regression or classification
+    Returns:
+        outfile (str): path to output CSV file of predictions
+    """
     # Status
     sys.stderr.write(f"Running ensemble prediction...\n")
 
@@ -224,7 +238,6 @@ def predict_ensemble_test(dataset_name, model_name, saved, testset_path, guidele
         # parse test_dataset
         test_inputs = [inputs for (inputs, label) in test_dataset.unbatch()]
 
-
         # Parsing inputs
         if len(test_inputs[0]) == 2:
             test_sequences = [np.array(sequences) for (sequences, features) in test_inputs]
@@ -240,14 +253,11 @@ def predict_ensemble_test(dataset_name, model_name, saved, testset_path, guidele
         test_df = pd.DataFrame(test_predic, columns = ['spacer sequence', 'predicted_value_sigmoid'])
         
         # Save output
-        #dataset_folder = os.path.join('results', dataset_name)
-        #os.makedirs(dataset_folder, exist_ok=True)
         prefix = os.path.splitext(testset_path)[0]
         outfile = f'{prefix}_guide_prediction_ensemble.csv'
         test_df.to_csv(outfile)
 
+    # Status
     sys.stderr.write(f"  Predictions written to {outfile}\n")
     return outfile
-
-
 
