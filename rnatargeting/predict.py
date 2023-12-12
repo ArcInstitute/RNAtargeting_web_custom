@@ -22,7 +22,7 @@ tf.random.set_seed(0)
 np.random.seed(0)
 
 # Functions
-def run_pred(fpath, outfile=None):
+def run_pred(fpath, outfile=None, top_n=30):
     """
     Main function for running prediction on a FASTA file.
     Args:
@@ -94,6 +94,9 @@ def run_pred(fpath, outfile=None):
             os.makedirs(outdir, exist_ok=True)
         pred_df.to_csv(outfile, index=False)
         sys.stderr.write(f"  Predictions written: {outfile}\n")
+
+    # Filter to top N for each `transcript id` group
+    pred_df = pred_df.groupby('transcript id').head(top_n)
 
     # Return dataframe
     return pred_df
