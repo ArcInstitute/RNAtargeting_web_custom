@@ -1,39 +1,32 @@
 RNAtargeting_web_custom
 =======================
 
-Source code of the custom page for the RNA targeting website - Cas13d guide design
+Source code for the "custom" feature of the [cas13d RNA-targeting web app](https://arcinstitute.org/tools/cas13d).
 
 > WARNING: this is a work in progress; the API could change at any time
 
-# Run the app locally
+# Usage 
+
+## Install
 
 ```bash
-streamlit run app.py
+pip install -r requirements.txt
 ```
 
-# Dev 
-
-It's best to use the .devcontainer to develop this project.
-It has all the dependencies installed and configured.
-
-## Run tests
+## [optional] Run tests
 
 ```bash
 pytest -s tests
 ```
 
-***
+## Run the app
 
-# OLD 
+```bash
+streamlit run app.py
+```
 
-## Contents
-* `app.py`: FLASK app script
-* `templates/`: HTML templates -- "header.html" contains the header, scripts and CSS styles; "custom.html" is the custom input page; "custom_results.html" is the custom result output page.
-* `predict.py`: Function for custom CasRx guide design, which involves the use of the scripts in `scripts/` and `predict_ensemble_test.py`
-* `scripts/`: Scripts for CasRx guide design for custom input sequences
-* `dataset/`: Model input dataset and features for custom CasRx guide design
-* `models/`;`saved_model/`: CNN models and saved models for custom CasRx guide design
-* `utils.py`: Provides useful utilities for the CNN model
-* `static/`: Contains images for the website and the prediction results for guide design
+# Citation
 
-
+> Deep learning and CRISPR-Cas13d ortholog discovery for optimized RNA targeting.
+Jingyi Wei, Peter Lotfy, Kian Faizi, Sara Baungaard, Emily Gibson, Eleanor Wang, Hannah Slabodkin, Emily Kinnaman, Sita Chandrasekaran, Hugo Kitano, Matthew G. Durrant, Connor V. Duffy, Patrick D. Hsu, Silvana Konermann
+bioRxiv 2021.09.14.460134; doi: https://doi.org/10.1101/2021.09.14.460134
