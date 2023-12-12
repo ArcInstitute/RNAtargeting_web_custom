@@ -1,5 +1,5 @@
 import os
-import pdb
+import uuid
 import subprocess
 import h5py
 import numpy as np
@@ -45,8 +45,22 @@ linearfold_positions = {
 
 RESULTS_DIR = 'results/'
 
+def read_byte_string(fpath, tmpdir_name):
+    """
+    Reads a byte string and writes it to a temporary file.
+    """
+    try:
+        tmpfile = os.path.join(tmpdir_name, str(uuid.uuid4()) + '.fasta')
+        with open(tmpfile, 'w') as tmp:
+            tmp.write(fpath.decode('utf-8'))
+    except Exception as e:
+        raise Exception(f"The input file is not a valid FASTA file: {e}")
+    return tmpfile  
 
 def run_subprocess(cmd):
+    """
+    Runs a subprocess and returns the output and errors.
+    """
     try:
         # Start the subprocess
         process = subprocess.Popen(

@@ -3,7 +3,6 @@
 import os
 import sys
 import tempfile
-import uuid
 ## 3rd party
 import numpy as np
 import pandas as pd
@@ -12,7 +11,7 @@ import tensorflow as tf
 from tensorflow import keras
 import keras
 ## App
-from rnatargeting.utils import run_subprocess, encoded_nuc_to_str
+from rnatargeting.utils import encoded_nuc_to_str, read_byte_string
 from rnatargeting.linearfold import run_linearfold, make_guide_library_features, linearfold_integrate_results
 from rnatargeting.models.models import guide_nolin_ninef_model, guide_nolin_threef_model
 from rnatargeting.dataset.generators import CNN_sequence_input_dataset, CNN_all_features_input_dataset
@@ -37,11 +36,8 @@ def run_pred(fpath, outfile=None, top_n=30):
 
     # If input is a bytes string, write to file
     if isinstance(fpath, bytes):
-        tmpfile = os.path.join(tmpdir_name, str(uuid.uuid4()) + '.fasta')
-        with open(tmpfile, 'w') as tmp:
-            tmp.write(fpath.decode('utf-8'))
-        fpath = tmpfile    
-    
+        fpath = read_byte_string(fpath, tmpdir_name)  
+
     # Make guide library and Linearfold input:
     feature_files = make_guide_library_features(fpath, tmpdir_name)
 
