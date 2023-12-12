@@ -1,0 +1,80 @@
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+name: ci-cd
+
+jobs:
+  test:
+    runs-on: ${{ matrix.config.os }}
+
+    name: ${{ matrix.config.os }} (${{ matrix.config.python }})
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {os: "ubuntu-20.04", python: "3.9.17"}
+
+    env:
+      APP: rna-targeting-web-custom
+      PORT: 8080
+
+    steps:
+      - id: "Checkout"
+        name: "Checkout code"
+        uses: actions/checkout@v3
+      - id: "Python"
+        name: "Set up Python"
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.config.python }}
+      - id: "Python-deps"
+        name: "Install app dependencies"
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - id: "pytest-install"
+        name: "Install pytest"
+        run: |
+          pip install pytest
+      - id: "pytest-run"
+        name: "Run pytest"
+        shell: bash -l {0}
+        run: |
+          pytest -s tests
+      - id: "Google-Auth"
+        name: "Authenticate to Google Cloud"
+        uses: "google-github-actions/auth@v1"
+        with:
+          credentials_json: "${{ secrets.GOOGLE_CREDENTIALS }}"
+      - id: "gcloud-setup"
+        name: "Set up GCP Cloud SDK"
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: "${{ secrets.GCP_PROJECT_ID }}"
+      - id: "Docker-Auth"
+        name: "Docker authentication"
+        run: |
+          gcloud auth configure-docker us-west1-docker.pkg.dev --project ${{ secrets.GCP_PROJECT_ID }}
+      - id: "Docker-Build"
+        name: "Build and push container"
+        run: |
+          docker build -t "us-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.APP }}/${{ env.APP }}:${{ github.sha }}" . \
+            && docker push "us-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.APP }}/${{ env.APP }}:${{ github.sha }}"
+      - id: "Deploy"
+        name: "Deploy to Cloud Run"
+        uses: google-github-actions/deploy-cloudrun@v1
+        with:
+          service: "${{ env.APP }}"
+          image: "us-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.APP }}/${{ env.APP }}:${{ github.sha }}"
+          region: "us-west1"
+          flags: >
+            --service-account=${{ secrets.GCP_SERVICE_ACCOUNT }}
+            --port=${{ env.PORT }}
+            --cpu=2
+            --memory=2Gi
+            --max-instances=20
+            --concurrency=40

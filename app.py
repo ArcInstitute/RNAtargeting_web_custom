@@ -49,7 +49,7 @@ image_base64 = get_image_as_base64("img/arc-logo-white.png")
 st.markdown(
     f"""
     <div style="display: flex; align-items: center;">
-        <a href="https://arcinstitute.org/" target="_blank">
+        <a href="https://arcinstitute.org/tools/cas13d" target="_blank">
             <img src="{image_base64}" alt="ARC Institute Logo" style="vertical-align: middle; margin-left: 15px; margin-right: 30px;" width="65" height="65">
         </a>
         <span class='font-castoro'>
