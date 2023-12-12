@@ -1,27 +1,30 @@
-# RNAtargeting_web_custom
-source code of the custom page for the RNA targeting website - Cas13d guide design
+RNAtargeting_web_custom
+=======================
 
-## Downloading and Setting up
-* Clone the repository
-```
-git clone https://github.com/jingyi7777/RNAtargeting_web_custom.git
-```
-* Setting up Linearfold: (Dependencies: GCC 4.8.5 or above; Python 2.7)
-```
-cd RNAtargeting_web_custom
-git clone https://github.com/LinearFold/LinearFold.git
-cd LinearFold
-make
-```
-* Setting up Tensorflow2 and other packages: (Dependencies: Python 3)
-```
-pip3 install -r requirements.txt
+Source code of the custom page for the RNA targeting website - Cas13d guide design
+
+> WARNING: this is a work in progress; the API could change at any time
+
+# Run the app locally
+
+```bash
+streamlit run app.py
 ```
 
-## Testing locally
+# Dev 
+
+It's best to use the .devcontainer to develop this project.
+It has all the dependencies installed and configured.
+
+## Run tests
+
+```bash
+pytest -s tests
 ```
-python app.py
-```
+
+***
+
+# OLD 
 
 ## Contents
 * `app.py`: FLASK app script
@@ -32,4 +35,5 @@ python app.py
 * `models/`;`saved_model/`: CNN models and saved models for custom CasRx guide design
 * `utils.py`: Provides useful utilities for the CNN model
 * `static/`: Contains images for the website and the prediction results for guide design
+
 

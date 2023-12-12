@@ -1,60 +1,93 @@
+# import
+import os
+import base64
+## 3rd party
+from PIL import Image
+import streamlit as st
+## App
+from rnatargeting.predict import run_pred
 
-# https://www.digitalocean.com/community/tutorials/how-to-make-a-web-application-using-flask-in-python-3
+# Init variables
+fasta_file = None
 
-from flask import Flask, render_template, request, send_file, make_response, url_for, Response, redirect
-import pandas as pd
-import csv
-#import sqlite3
-import mysql.connector
+# functions
+def get_image_as_base64(path):
+    with open(path, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode()
+    return "data:image/png;base64," + encoded_string
 
-#import predict
-from predict import run_pred
+# App init
+st.set_page_config(
+    page_title="RNA Targeting",
+    page_icon="img/arc-logo.ico",
+    layout="centered",
+    initial_sidebar_state="auto",
+    menu_items=None
+)
 
-app = Flask(__name__)
+# Styling
+font_url_h = "https://fonts.googleapis.com/css2?family=Castoro"
+st.markdown(f'<link href="{font_url_h}" rel="stylesheet">', unsafe_allow_html=True)
+font_url_c = "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;700&display=swap"
+st.markdown(f'<link href="{font_url_c}" rel="stylesheet">', unsafe_allow_html=True)
+## Custom CSS
+st.markdown("""
+    <style>
+    .font-castoro {
+        font-family: 'Castoro', sans-serif;
+    }
+    .font-ibm-plex-sans {
+        font-family: 'IBM Plex Sans', sans-serif;
+    }
+    </style>
+    """, unsafe_allow_html=True
+)
 
-@app.route('/')
-def homepage():
-    return render_template("main.html")
+# Main
+## Title
+image_base64 = get_image_as_base64("img/arc-logo-white.png")
+st.markdown(
+    f"""
+    <div style="display: flex; align-items: center;">
+        <a href="https://arcinstitute.org/" target="_blank">
+            <img src="{image_base64}" alt="ARC Institute Logo" style="vertical-align: middle; margin-left: 15px; margin-right: 30px;" width="65" height="65">
+        </a>
+        <span class='font-castoro'>
+            <h2>Custom Sequence Cas13d Guide Efficiency Prediction</h2>
+        </span>
+    </div>
+    """, unsafe_allow_html=True
+)
+## Description
+st.markdown(
+    """
+    <div class='font-ibm-plex-sans'>
 
-@app.route('/custom')
-def custom_get():
-    return render_template("custom.html")
+    <h5>This interface provides CasRx guide design for custom input sequences.</h5>
 
+    <strong>Guidance:</strong>
+    <ul>
+      <li>For best results, please input the ENTIRE target sequence to enable local target structure prediction and selection of the best recommended guides.
+        <ul>
+            <li>If you are only interested in a short region on a target sequence, you can further process our results and pick guides in your region of interest.</li>
+        </ul>
+      </li>
+      <li>We recommend an input sequence of at least 60nt, and ideally >200nt.</li>
+      <li>Make sure to check if your gene is available in our main tool before using our custom input model as it does not use information like CDS location, splice variants or relative target positions in the full transcript.</li>
+    </ul>
+    </div>
+    """, unsafe_allow_html=True
+)
 
-@app.route('/custom_results', methods=['POST','GET'])
-def upload_file_fa():
-    if request.method == "POST":
-        # check if the post request has the file part
-        if 'file' not in request.files:
-            #flash('No file part')
-            return redirect(request.url)
-        file = request.files['file']
-        # if user does not select file, browser also
-        # submit an empty part without filename
-        if file.filename == '':
-            #flash('No selected file')
-            return redirect(request.url)
-        if file:
-            filename = file.filename
-            save_p = 'dataset/'+ str(filename)
-            file.save(save_p)
-            result_p = run_pred(save_p) # run prediction scripts
-            rowlist = []
-            with open(result_p) as csvfile:
-                myreader = csv.reader(csvfile)
-                headers = next(myreader, None)
-                i = 1
-                for row in myreader:
-                    rowlist.append(row)
-                    i += 1
-                    if i >20:
-                        return render_template("custom_results.html", resultlist = rowlist, result_path = result_p)
-                        break
-
-    #return redirect(url_for('index'))
-    return render_template("custom_results.html")
-
-
-if __name__ == '__main__':
-    # run app
-    app.run(debug=False, host='0.0.0.0',port=80)
+## File upload
+fasta_file = st.file_uploader('Upload a nucleotide fasta file')
+## Predict & display results
+if fasta_file is not None:
+    with st.spinner("Calculating..."):
+        try:
+            df_pred = run_pred(fasta_file.getvalue())
+            st.dataframe(df_pred)
+        except Exception as e:
+            st.error(e)
+        
+        
