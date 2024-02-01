@@ -80,13 +80,17 @@ st.markdown(
 )
 
 ## File upload
-fasta_file = st.file_uploader('Upload a nucleotide fasta file')
+col1, col2 = st.columns([0.75, 0.25])
+with col1:
+    fasta_file = st.file_uploader('Upload a nucleotide fasta file')
+with col2:
+    top_n = st.number_input('Top N guides to return', min_value=1, max_value=99999, value=30)
 ## Predict & display results
 if fasta_file is not None:
     with st.spinner("Calculating..."):
         try:
             df_pred = run_pred(fasta_file.getvalue())
-            st.dataframe(df_pred)
+            st.dataframe(df_pred.groupby('transcript id').head(top_n))
         except Exception as e:
             st.error(e)
         
