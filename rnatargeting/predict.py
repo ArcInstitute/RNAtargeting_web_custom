@@ -22,7 +22,7 @@ tf.random.set_seed(0)
 np.random.seed(0)
 
 # Functions
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def run_pred(fpath, outfile=None):
     """
     Main function for running prediction on a FASTA file.
