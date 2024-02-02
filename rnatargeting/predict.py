@@ -10,6 +10,7 @@ import sklearn
 import tensorflow as tf
 from tensorflow import keras
 import keras
+import streamlit as st
 ## App
 from rnatargeting.utils import encoded_nuc_to_str, read_byte_string
 from rnatargeting.linearfold import run_linearfold, make_guide_library_features, linearfold_integrate_results
@@ -21,7 +22,8 @@ tf.random.set_seed(0)
 np.random.seed(0)
 
 # Functions
-def run_pred(fpath, outfile=None, top_n=30):
+@st.cache_data(show_spinner=False)
+def run_pred(fpath, outfile=None):
     """
     Main function for running prediction on a FASTA file.
     Args:
@@ -92,7 +94,7 @@ def run_pred(fpath, outfile=None, top_n=30):
         sys.stderr.write(f"  Predictions written: {outfile}\n")
 
     # Filter to top N for each `transcript id` group
-    pred_df = pred_df.groupby('transcript id').head(top_n)
+    #pred_df = pred_df.groupby('transcript id').head(top_n)
 
     # Return dataframe
     return pred_df
