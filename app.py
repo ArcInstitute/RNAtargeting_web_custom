@@ -25,23 +25,16 @@ st.set_page_config(
     menu_items=None
 )
 
-# Styling
-font_url_h = "https://fonts.googleapis.com/css2?family=Castoro"
-st.markdown(f'<link href="{font_url_h}" rel="stylesheet">', unsafe_allow_html=True)
-font_url_c = "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;700&display=swap"
-st.markdown(f'<link href="{font_url_c}" rel="stylesheet">', unsafe_allow_html=True)
-## Custom CSS
-st.markdown("""
-    <style>
-    .font-castoro {
-        font-family: 'Castoro', sans-serif;
-    }
-    .font-ibm-plex-sans {
-        font-family: 'IBM Plex Sans', sans-serif;
-    }
-    </style>
-    """, unsafe_allow_html=True
-)
+# Set custom styles
+font_css = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;700&display=swap');
+body * {
+    font-family: 'IBM Plex Sans', sans-serif !important;
+}
+</style>
+"""
+st.markdown(font_css, unsafe_allow_html=True)
 
 # Main
 ## Title
